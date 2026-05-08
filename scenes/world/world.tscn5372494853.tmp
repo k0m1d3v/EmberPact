@@ -1,0 +1,37 @@
+[gd_scene format=3 uid="uid://ml85m47d4v43"]
+
+[ext_resource type="Script" uid="uid://ddrmy1bbxpqy0" path="res://scripts/player.gd" id="1_dphjl"]
+[ext_resource type="Script" uid="uid://cnqcwmv3s3dqx" path="res://scripts/world.gd" id="1_sl2e5"]
+
+[sub_resource type="TileSet" id="TileSet_1fp7r"]
+
+[sub_resource type="PlaceholderTexture2D" id="PlaceholderTexture2D_sl2e5"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_1fp7r"]
+
+[node name="Node2D" type="Node2D" unique_id=460406248]
+script = ExtResource("1_sl2e5")
+
+[node name="TileMapLayer" type="TileMapLayer" parent="." unique_id=1541564000]
+tile_set = SubResource("TileSet_1fp7r")
+
+[node name="Player" type="CharacterBody2D" parent="." unique_id=1858406639]
+position = Vector2(128, 128)
+script = ExtResource("1_dphjl")
+
+[node name="Sprite2D" type="Sprite2D" parent="Player" unique_id=1451831996]
+texture = SubResource("PlaceholderTexture2D_sl2e5")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Player" unique_id=2132361409]
+shape = SubResource("RectangleShape2D_1fp7r")
+
+[node name="ColorRect" type="ColorRect" parent="Player" unique_id=898969026]
+offset_left = -8.0
+offset_top = -8.0
+offset_right = 8.0
+offset_bottom = 8.0
+color = Color(1, 0.41960785, 0.20784314, 1)
+metadata/_edit_use_anchors_ = true
+
+[node name="Camera2D" type="Camera2D" parent="Player" unique_id=1808383903]
+zoom = Vector2(3, 3)

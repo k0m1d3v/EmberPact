@@ -9,6 +9,10 @@ var is_moving := false
 var target_position := Vector2.ZERO
 var inventory: Array = []
 var equipped_weapon: Dictionary = {}
+var equipped_armor: Dictionary = {}
+var hp: int = 50
+var max_hp: int = 50
+var base_defense: int = 3
 
 func _ready():
 	global_position = global_position.snapped(Vector2(TILE_SIZE, TILE_SIZE))
@@ -34,6 +38,9 @@ func _process(_delta):
 	if direction != Vector2.ZERO:
 		target_position = global_position + direction
 		is_moving = true
+
+func get_defense() -> int:
+	return base_defense + equipped_armor.get("defense", 0)
 
 func get_attack() -> int:
 	if not equipped_weapon.is_empty():

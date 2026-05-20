@@ -8,6 +8,7 @@ const BattleUIScene = preload("res://scenes/ui/battle_ui.tscn")
 const ItemPickupScript = preload("res://scripts/item_pickup.gd")
 const ForgeScript = preload("res://scripts/forge.gd")
 const ForgeUIScript = preload("res://scripts/forge_ui.gd")
+const GameOverUIScript = preload("res://scripts/game_over_ui.gd")
 
 const ENEMY_CONFIGS = [
 	{"enemy_name": "Slime",     "hp": 30, "attack": 8,  "defense": 2, "drop": "Frammento di ferro"},
@@ -30,6 +31,7 @@ var battle_ui_instance: Node
 var inventory_ui_instance: Node
 var forge_node: Node = null
 var forge_ui_node: Node = null
+var game_over_ui_node: Node = null
 var in_battle := false
 var defeat_cooldown := false
 var enemies: Array = []
@@ -62,6 +64,11 @@ func _ready():
 	forge_node.global_position = Vector2(48, -32)
 	add_child(forge_node)
 	forge_node.setup(player, forge_ui_node)
+
+	game_over_ui_node = CanvasLayer.new()
+	game_over_ui_node.set_script(GameOverUIScript)
+	game_over_ui_node.layer = 10
+	add_child(game_over_ui_node)
 
 func _register_actions():
 	if not InputMap.has_action("interact"):
@@ -144,7 +151,7 @@ func start_battle(enemy: Node):
 		forge_node.can_interact = false
 	battle_manager.start_battle(player, enemy, battle_ui_instance)
 
-func _on_battle_ended(won: bool):
+func _on_battle_ended(won: bool, was_defeat: bool):
 	in_battle = false
 	if won:
 		print("Vittoria!")
@@ -155,8 +162,12 @@ func _on_battle_ended(won: bool):
 		if enemies.is_empty():
 			print("Tutti i nemici sconfitti! Rigenerazione tra 10 secondi...")
 			get_tree().create_timer(10.0).timeout.connect(respawn_enemies)
+	elif was_defeat:
+		print("Sconfitta!")
+		current_battle_enemy = null
+		game_over_ui_node.show_game_over()
 	else:
-		print("Sconfitta o fuga")
+		print("Fuga!")
 		current_battle_enemy = null
 		defeat_cooldown = true
 		get_tree().create_timer(3.0).timeout.connect(func(): defeat_cooldown = false)

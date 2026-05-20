@@ -4,19 +4,22 @@ const RECIPES = [
 	{
 		"name": "Spada di ferro",
 		"type": "weapon",
-		"damage": 20,
+		"damage": 18,
+		"defense": 0,
 		"materials": {"Frammento di ferro": 3},
 	},
 	{
 		"name": "Armatura di pelle",
 		"type": "armor",
 		"damage": 0,
+		"defense": 5,
 		"materials": {"Pelle grezza": 2},
 	},
 	{
 		"name": "Frecce",
 		"type": "weapon",
-		"damage": 15,
+		"damage": 10,
+		"defense": 0,
 		"materials": {"Osso": 2},
 	},
 ]
@@ -92,7 +95,11 @@ func _add_recipe_row(recipe: Dictionary):
 	var mats: PackedStringArray = []
 	for mat in recipe["materials"]:
 		mats.append("%s x%d" % [mat, recipe["materials"][mat]])
-	var stat = " [ATK %d]" % recipe["damage"] if recipe["damage"] > 0 else ""
+	var stat = ""
+	if recipe["damage"] > 0:
+		stat = " [ATK %d]" % recipe["damage"]
+	elif recipe.get("defense", 0) > 0:
+		stat = " [DEF +%d]" % recipe["defense"]
 	info.text = "%s%s\n%s" % [recipe["name"], stat, ", ".join(mats)]
 	info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	hbox.add_child(info)
@@ -124,6 +131,7 @@ func _on_forge(recipe: Dictionary):
 		"name": recipe["name"],
 		"type": recipe["type"],
 		"damage": recipe["damage"],
+		"defense": recipe.get("defense", 0),
 		"essence_slots": [],
 	}
 	player_ref.inventory.append(item)
@@ -131,6 +139,10 @@ func _on_forge(recipe: Dictionary):
 		if player_ref.equipped_weapon.is_empty() or item["damage"] > player_ref.equipped_weapon.get("damage", 0):
 			player_ref.equipped_weapon = item
 			print("Arma equipaggiata: %s (ATK: %d)" % [item["name"], item["damage"]])
+	elif item["type"] == "armor":
+		if player_ref.equipped_armor.is_empty() or item["defense"] > player_ref.equipped_armor.get("defense", 0):
+			player_ref.equipped_armor = item
+			print("Armatura equipaggiata: %s (DEF +%d)" % [item["name"], item["defense"]])
 	player_ref.inventory_changed.emit(player_ref.inventory)
 	print("Forgiato: %s" % item["name"])
 	_refresh_recipes()

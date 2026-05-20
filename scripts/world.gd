@@ -34,6 +34,7 @@ var game_over_ui_node: Node = null
 var save_mgr: Node = null
 var role_select_ui: Node = null
 var hp_label: Label = null
+var hp_bar_fill: ColorRect = null
 var enemies: Array = []
 
 func _ready():
@@ -75,9 +76,19 @@ func _ready():
 	var hp_layer = CanvasLayer.new()
 	hp_layer.layer = 1
 	add_child(hp_layer)
+	var hp_bg = ColorRect.new()
+	hp_bg.color = Color("#4A0000")
+	hp_bg.size = Vector2(84, 10)
+	hp_bg.position = Vector2(8, 8)
+	hp_layer.add_child(hp_bg)
+	hp_bar_fill = ColorRect.new()
+	hp_bar_fill.color = Color("#E63946")
+	hp_bar_fill.size = Vector2(84, 10)
+	hp_bar_fill.position = Vector2(8, 8)
+	hp_layer.add_child(hp_bar_fill)
 	hp_label = Label.new()
-	hp_label.position = Vector2(8, 8)
-	hp_label.add_theme_font_size_override("font_size", 14)
+	hp_label.position = Vector2(8, 20)
+	hp_label.add_theme_font_size_override("font_size", 10)
 	hp_layer.add_child(hp_label)
 
 	player.hp_changed.connect(_on_player_hp_changed)
@@ -107,20 +118,12 @@ func generate_world():
 	var tileset = TileSet.new()
 	tileset.tile_size = Vector2i(16, 16)
 
-	var image = Image.create(16, 16, false, Image.FORMAT_RGB8)
-	image.fill(Color(0.29, 0.51, 0.24))
-
-	for x in range(16):
-		for y in range(16):
-			if x == 0 or y == 0:
-				image.set_pixel(x, y, Color(0.20, 0.38, 0.16))
-
-	var texture = ImageTexture.create_from_image(image)
-
+	var atlas_texture = load("res://assets/tiles/tileset_atlas.png")
 	var source = TileSetAtlasSource.new()
-	source.texture = texture
+	source.texture = atlas_texture
 	source.texture_region_size = Vector2i(16, 16)
-	source.create_tile(Vector2i(0, 0))
+	for col in range(6):
+		source.create_tile(Vector2i(col, 0))
 	tileset.add_source(source, 0)
 
 	tilemap.tile_set = tileset
@@ -175,11 +178,15 @@ func _on_enemy_died(pos: Vector2, drop: String, enemy_node: Node):
 
 func _on_player_hp_changed(current_hp: int, max_hp: int):
 	if hp_label:
-		hp_label.text = "HP: %d/%d" % [current_hp, max_hp]
+		hp_label.text = "%d / %d" % [current_hp, max_hp]
+	if hp_bar_fill and max_hp > 0:
+		hp_bar_fill.size.x = 84.0 * float(current_hp) / float(max_hp)
 	if current_hp <= 0:
 		player.hp = player.max_hp
 		if hp_label:
-			hp_label.text = "HP: %d/%d" % [player.max_hp, max_hp]
+			hp_label.text = "%d / %d" % [player.max_hp, max_hp]
+		if hp_bar_fill:
+			hp_bar_fill.size.x = 84.0
 		save_mgr.save_game(player)
 		game_over_ui_node.show_game_over()
 

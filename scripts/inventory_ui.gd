@@ -40,7 +40,11 @@ func update_display(inventory: Array):
 		if item is String:
 			counts[item] = counts.get(item, 0) + 1
 		elif item is Dictionary:
-			var stat = " [ATK %d]" % item["damage"] if item.get("damage", 0) > 0 else ""
+			var stat = ""
+			if item.get("damage", 0) > 0:
+				stat = " [ATK %d]" % item["damage"]
+			elif item.get("defense", 0) > 0:
+				stat = " [DEF +%d]" % item["defense"]
 			equip_lines.append("%s%s" % [item.get("name", "?"), stat])
 	var lines: PackedStringArray = []
 	for item_name in counts:

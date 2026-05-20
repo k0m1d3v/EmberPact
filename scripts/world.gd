@@ -31,6 +31,7 @@ var inventory_ui_instance: Node
 var forge_node: Node = null
 var forge_ui_node: Node = null
 var in_battle := false
+var defeat_cooldown := false
 var enemies: Array = []
 var current_battle_enemy: Node = null
 
@@ -127,6 +128,8 @@ func _process(_delta):
 	check_player_enemy_collision()
 
 func check_player_enemy_collision():
+	if defeat_cooldown:
+		return
 	for enemy in enemies:
 		if not is_instance_valid(enemy):
 			continue
@@ -155,6 +158,8 @@ func _on_battle_ended(won: bool):
 	else:
 		print("Sconfitta o fuga")
 		current_battle_enemy = null
+		defeat_cooldown = true
+		get_tree().create_timer(3.0).timeout.connect(func(): defeat_cooldown = false)
 	if forge_node != null:
 		forge_node.can_interact = true
 

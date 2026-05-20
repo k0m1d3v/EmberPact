@@ -73,7 +73,7 @@ func _on_action(action: String):
 		
 		var enemy_dmg = max(1, enemy_atk - player_defense)
 		player_hp -= enemy_dmg
-		battle_log += "\n%s ti attacca per %d! (Tuoi HP: %d)" % [ename, enemy_dmg, player_hp]
+		battle_log += "\n%s ti attacca per %d! (Tuoi HP: %d)" % [ename, enemy_dmg, max(0, player_hp)]
 		
 		if player_hp <= 0:
 			battle_log += "\n💀 Sei stato sconfitto..."
@@ -90,6 +90,8 @@ func _on_action(action: String):
 
 func end_battle(won: bool):
 	in_battle = false
+	if not won:
+		player_hp = player_max_hp
 	battle_ended.emit(won)
 	await get_tree().create_timer(2.0).timeout
 	battle_ui.hide()

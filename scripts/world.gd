@@ -5,6 +5,7 @@ extends Node2D
 
 const EnemyScene = preload("res://scenes/enemies/enemy.tscn")
 const BattleUIScene = preload("res://scenes/ui/battle_ui.tscn")
+const ItemPickupScript = preload("res://scripts/item_pickup.gd")
 
 var battle_manager: Node
 var battle_ui_instance: Node
@@ -82,5 +83,14 @@ func _on_battle_ended(won: bool):
 	in_battle = false
 	if won:
 		print("Vittoria!")
+		if enemy_instance != null and is_instance_valid(enemy_instance):
+			spawn_drop(enemy_instance.global_position, enemy_instance.drop_item)
 	else:
 		print("Sconfitta o fuga")
+
+func spawn_drop(pos: Vector2, item_name: String):
+	var pickup = Area2D.new()
+	pickup.set_script(ItemPickupScript)
+	add_child(pickup)
+	pickup.global_position = pos
+	pickup.item_name = item_name

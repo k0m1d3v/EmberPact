@@ -6,6 +6,8 @@ extends Node2D
 const EnemyScene = preload("res://scenes/enemies/enemy.tscn")
 const BattleUIScene = preload("res://scenes/ui/battle_ui.tscn")
 const ItemPickupScript = preload("res://scripts/item_pickup.gd")
+const ForgeScript = preload("res://scripts/forge.gd")
+const ForgeUIScript = preload("res://scripts/forge_ui.gd")
 
 const ENEMY_CONFIGS = [
 	{"enemy_name": "Slime",     "hp": 30, "attack": 8,  "defense": 2, "drop": "Frammento di ferro"},
@@ -26,11 +28,14 @@ const INITIAL_POSITIONS = [
 var battle_manager: Node
 var battle_ui_instance: Node
 var inventory_ui_instance: Node
+var forge_node: Node = null
+var forge_ui_node: Node = null
 var in_battle := false
 var enemies: Array = []
 var current_battle_enemy: Node = null
 
 func _ready():
+	_register_actions()
 	generate_world()
 	spawn_all_enemies(INITIAL_POSITIONS)
 
@@ -46,6 +51,23 @@ func _ready():
 	inventory_ui_instance.set_script(load("res://scripts/inventory_ui.gd"))
 	add_child(inventory_ui_instance)
 	player.inventory_changed.connect(inventory_ui_instance.update_display)
+
+	forge_ui_node = CanvasLayer.new()
+	forge_ui_node.set_script(ForgeUIScript)
+	add_child(forge_ui_node)
+
+	forge_node = Node2D.new()
+	forge_node.set_script(ForgeScript)
+	forge_node.global_position = Vector2(48, -32)
+	add_child(forge_node)
+	forge_node.setup(player, forge_ui_node)
+
+func _register_actions():
+	if not InputMap.has_action("interact"):
+		InputMap.add_action("interact")
+		var ev = InputEventKey.new()
+		ev.keycode = KEY_E
+		InputMap.action_add_event("interact", ev)
 
 func generate_world():
 	var tileset = TileSet.new()
@@ -115,6 +137,8 @@ func check_player_enemy_collision():
 func start_battle(enemy: Node):
 	in_battle = true
 	current_battle_enemy = enemy
+	if forge_node != null:
+		forge_node.can_interact = false
 	battle_manager.start_battle(player, enemy, battle_ui_instance)
 
 func _on_battle_ended(won: bool):
@@ -131,6 +155,8 @@ func _on_battle_ended(won: bool):
 	else:
 		print("Sconfitta o fuga")
 		current_battle_enemy = null
+	if forge_node != null:
+		forge_node.can_interact = true
 
 func respawn_enemies():
 	print("Nemici rigenerati!")

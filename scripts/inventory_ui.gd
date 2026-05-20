@@ -35,9 +35,15 @@ func update_display(inventory: Array):
 		items_label.text = "(vuoto)"
 		return
 	var counts: Dictionary = {}
+	var equip_lines: PackedStringArray = []
 	for item in inventory:
-		counts[item] = counts.get(item, 0) + 1
+		if item is String:
+			counts[item] = counts.get(item, 0) + 1
+		elif item is Dictionary:
+			var stat = " [ATK %d]" % item["damage"] if item.get("damage", 0) > 0 else ""
+			equip_lines.append("%s%s" % [item.get("name", "?"), stat])
 	var lines: PackedStringArray = []
 	for item_name in counts:
 		lines.append("%s x%d" % [item_name, counts[item_name]])
+	lines.append_array(equip_lines)
 	items_label.text = "\n".join(lines)

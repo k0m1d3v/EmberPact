@@ -8,6 +8,7 @@ signal inventory_changed(inventory: Array)
 var is_moving := false
 var target_position := Vector2.ZERO
 var inventory: Array = []
+var equipped_weapon: Dictionary = {}
 
 func _ready():
 	global_position = global_position.snapped(Vector2(TILE_SIZE, TILE_SIZE))
@@ -33,6 +34,11 @@ func _process(_delta):
 	if direction != Vector2.ZERO:
 		target_position = global_position + direction
 		is_moving = true
+
+func get_attack() -> int:
+	if not equipped_weapon.is_empty():
+		return equipped_weapon.get("damage", 12)
+	return 12
 
 func add_item(item_name: String):
 	inventory.append(item_name)

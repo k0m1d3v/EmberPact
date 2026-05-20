@@ -3,6 +3,8 @@ extends CharacterBody2D
 const TILE_SIZE = 16
 const MOVE_SPEED = 8.0
 
+signal inventory_changed(inventory: Array)
+
 var is_moving := false
 var target_position := Vector2.ZERO
 var inventory: Array = []
@@ -36,3 +38,4 @@ func add_item(item_name: String):
 	inventory.append(item_name)
 	print("Raccolto: %s" % item_name)
 	print("Inventario: ", inventory)
+	inventory_changed.emit(inventory)

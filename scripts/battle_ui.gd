@@ -13,6 +13,7 @@ func _ready():
 
 func show_battle(player_hp: int, enemy_name: String, enemy_hp: int):
 	show()
+	set_buttons_enabled(true)
 	update_log("⚔️ %s appare!\nTuoi HP: %d | HP nemico: %d" % [enemy_name, player_hp, enemy_hp])
 
 func update_log(text: String):

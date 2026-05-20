@@ -44,7 +44,8 @@ func _on_action(action: String):
 		var ehp = 0
 		
 		if enemy_ref.has_method("take_damage"):
-			dmg = enemy_ref.take_damage(player_attack)
+			var actual_attack = player_ref.get_attack() if player_ref != null and player_ref.has_method("get_attack") else player_attack
+			dmg = enemy_ref.take_damage(actual_attack)
 			ehp = enemy_ref.hp
 		else:
 			dmg = player_attack

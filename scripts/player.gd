@@ -5,6 +5,7 @@ const MOVE_SPEED = 8.0
 
 var is_moving := false
 var target_position := Vector2.ZERO
+var inventory: Array = []
 
 func _ready():
 	global_position = global_position.snapped(Vector2(TILE_SIZE, TILE_SIZE))
@@ -30,3 +31,8 @@ func _process(_delta):
 	if direction != Vector2.ZERO:
 		target_position = global_position + direction
 		is_moving = true
+
+func add_item(item_name: String):
+	inventory.append(item_name)
+	print("Raccolto: %s" % item_name)
+	print("Inventario: ", inventory)

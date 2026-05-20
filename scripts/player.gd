@@ -4,9 +4,16 @@ const TILE_SIZE = 16
 const MOVE_SPEED = 8.0
 
 signal inventory_changed(inventory: Array)
+signal hp_changed(current_hp: int, max_hp: int)
+signal attacked(tile_pos: Vector2)
 
 var is_moving := false
 var target_position := Vector2.ZERO
+var last_direction := Vector2(1, 0)
+var attack_cooldown := 0.0
+var attack_flash: ColorRect = null
+var forge_ref: Node = null
+
 var role: String = ""
 var inventory: Array = []
 var equipped_weapon: Dictionary = {}
@@ -20,7 +27,27 @@ func _ready():
 	global_position = global_position.snapped(Vector2(TILE_SIZE, TILE_SIZE))
 	target_position = global_position
 
-func _process(_delta):
+	attack_flash = ColorRect.new()
+	attack_flash.color = Color(1.0, 0.9, 0.1, 0.7)
+	attack_flash.size = Vector2(14, 14)
+	attack_flash.position = Vector2(-7, -7)
+	attack_flash.visible = false
+	add_child(attack_flash)
+
+func _process(delta):
+	if attack_cooldown > 0.0:
+		attack_cooldown -= delta
+
+	var near_forge = forge_ref != null and forge_ref.can_interact and \
+		global_position.distance_to(forge_ref.global_position) < 24
+	var want_attack = (Input.is_action_just_pressed("interact") and not near_forge) or \
+		Input.is_action_just_pressed("attack")
+
+	if want_attack and attack_cooldown <= 0.0:
+		attack_cooldown = 0.4
+		attacked.emit(global_position + last_direction * TILE_SIZE)
+		_show_attack_flash()
+
 	if is_moving:
 		global_position = global_position.move_toward(target_position, MOVE_SPEED)
 		if global_position == target_position:
@@ -30,16 +57,35 @@ func _process(_delta):
 	var direction := Vector2.ZERO
 	if Input.is_action_pressed("ui_right"):
 		direction = Vector2(TILE_SIZE, 0)
+		last_direction = Vector2(1, 0)
 	elif Input.is_action_pressed("ui_left"):
 		direction = Vector2(-TILE_SIZE, 0)
+		last_direction = Vector2(-1, 0)
 	elif Input.is_action_pressed("ui_down"):
 		direction = Vector2(0, TILE_SIZE)
+		last_direction = Vector2(0, 1)
 	elif Input.is_action_pressed("ui_up"):
 		direction = Vector2(0, -TILE_SIZE)
+		last_direction = Vector2(0, -1)
 
 	if direction != Vector2.ZERO:
 		target_position = global_position + direction
 		is_moving = true
+
+func _show_attack_flash():
+	attack_flash.position = last_direction * TILE_SIZE + Vector2(-7, -7)
+	attack_flash.modulate.a = 0.7
+	attack_flash.visible = true
+	var tween = create_tween()
+	tween.tween_property(attack_flash, "modulate:a", 0.0, 0.15)
+	tween.tween_callback(func(): attack_flash.visible = false)
+
+func take_damage(amount: int):
+	hp = max(0, hp - amount)
+	hp_changed.emit(hp, max_hp)
+	var tween = create_tween()
+	tween.tween_property(self, "modulate", Color(1.0, 0.3, 0.3), 0.05)
+	tween.tween_property(self, "modulate", Color(1, 1, 1), 0.2)
 
 func get_defense() -> int:
 	return base_defense + equipped_armor.get("defense", 0)
@@ -58,6 +104,7 @@ func apply_role(role_id: String):
 			max_hp = 40; hp = 40; base_attack = 15; base_defense = 2
 		"locandiere":
 			max_hp = 65; hp = 65; base_attack = 8; base_defense = 5
+	hp_changed.emit(hp, max_hp)
 
 func add_item(item_name: String):
 	inventory.append(item_name)

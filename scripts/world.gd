@@ -4,7 +4,6 @@ extends Node2D
 @onready var player = $Player
 
 const EnemyScene = preload("res://scenes/enemies/enemy.tscn")
-const BattleUIScene = preload("res://scenes/ui/battle_ui.tscn")
 const ItemPickupScript = preload("res://scripts/item_pickup.gd")
 const ForgeScript = preload("res://scripts/forge.gd")
 const ForgeUIScript = preload("res://scripts/forge_ui.gd")
@@ -28,31 +27,19 @@ const INITIAL_POSITIONS = [
 	Vector2(96, -160),
 ]
 
-var battle_manager: Node
-var battle_ui_instance: Node
 var inventory_ui_instance: Node
 var forge_node: Node = null
 var forge_ui_node: Node = null
 var game_over_ui_node: Node = null
 var save_mgr: Node = null
 var role_select_ui: Node = null
-var in_battle := false
-var defeat_cooldown := false
+var hp_label: Label = null
 var enemies: Array = []
-var current_battle_enemy: Node = null
 
 func _ready():
 	_register_actions()
 	generate_world()
 	spawn_all_enemies(INITIAL_POSITIONS)
-
-	battle_ui_instance = BattleUIScene.instantiate()
-	add_child(battle_ui_instance)
-
-	battle_manager = Node.new()
-	battle_manager.set_script(load("res://scripts/battle_manager.gd"))
-	add_child(battle_manager)
-	battle_manager.battle_ended.connect(_on_battle_ended)
 
 	inventory_ui_instance = CanvasLayer.new()
 	inventory_ui_instance.set_script(load("res://scripts/inventory_ui.gd"))
@@ -68,6 +55,7 @@ func _ready():
 	forge_node.global_position = Vector2(48, -32)
 	add_child(forge_node)
 	forge_node.setup(player, forge_ui_node)
+	player.forge_ref = forge_node
 
 	game_over_ui_node = CanvasLayer.new()
 	game_over_ui_node.set_script(GameOverUIScript)
@@ -84,6 +72,18 @@ func _ready():
 	add_child(role_select_ui)
 	role_select_ui.role_chosen.connect(_on_role_chosen)
 
+	var hp_layer = CanvasLayer.new()
+	hp_layer.layer = 1
+	add_child(hp_layer)
+	hp_label = Label.new()
+	hp_label.position = Vector2(8, 8)
+	hp_label.add_theme_font_size_override("font_size", 14)
+	hp_layer.add_child(hp_label)
+
+	player.hp_changed.connect(_on_player_hp_changed)
+	player.attacked.connect(_on_player_attacked)
+	player.inventory_changed.connect(func(_inv): save_mgr.save_game(player))
+
 	player.set_process(false)
 
 	if save_mgr.has_save() and save_mgr.load_game(player):
@@ -91,14 +91,17 @@ func _ready():
 	else:
 		role_select_ui.show_select()
 
-	player.inventory_changed.connect(func(_inv): save_mgr.save_game(player))
-
 func _register_actions():
 	if not InputMap.has_action("interact"):
 		InputMap.add_action("interact")
 		var ev = InputEventKey.new()
 		ev.keycode = KEY_E
 		InputMap.action_add_event("interact", ev)
+	if not InputMap.has_action("attack"):
+		InputMap.add_action("attack")
+		var ev2 = InputEventKey.new()
+		ev2.keycode = KEY_SPACE
+		InputMap.action_add_event("attack", ev2)
 
 func generate_world():
 	var tileset = TileSet.new()
@@ -139,9 +142,11 @@ func spawn_enemy(config: Dictionary, pos: Vector2):
 	enemy.attack = config["attack"]
 	enemy.defense = config["defense"]
 	enemy.drop_item = config["drop"]
+	enemy.player_ref = player
 	enemy.global_position = pos
 	add_child(enemy)
 	enemies.append(enemy)
+	enemy.died.connect(_on_enemy_died)
 
 func get_random_spawn_pos() -> Vector2:
 	for _i in range(30):
@@ -152,52 +157,31 @@ func get_random_spawn_pos() -> Vector2:
 			return pos
 	return Vector2(200, 200)
 
-func _process(_delta):
-	if in_battle:
-		return
-	check_player_enemy_collision()
-
-func check_player_enemy_collision():
-	if defeat_cooldown or player.role == "":
-		return
-	for enemy in enemies:
+func _on_player_attacked(tile_pos: Vector2):
+	for enemy in enemies.duplicate():
 		if not is_instance_valid(enemy):
 			continue
-		if player.global_position.distance_to(enemy.global_position) < 20:
-			start_battle(enemy)
-			return
+		if enemy.global_position.distance_to(tile_pos) < 14:
+			enemy.take_damage(player.get_attack())
+			break
 
-func start_battle(enemy: Node):
-	in_battle = true
-	current_battle_enemy = enemy
-	if forge_node != null:
-		forge_node.can_interact = false
-	battle_manager.start_battle(player, enemy, battle_ui_instance)
+func _on_enemy_died(pos: Vector2, drop: String, enemy_node: Node):
+	enemies.erase(enemy_node)
+	spawn_drop(pos, drop)
+	save_mgr.save_game(player)
+	if enemies.is_empty():
+		print("Tutti i nemici sconfitti! Rigenerazione tra 10 secondi...")
+		get_tree().create_timer(10.0).timeout.connect(respawn_enemies)
 
-func _on_battle_ended(won: bool, was_defeat: bool):
-	in_battle = false
-	if won:
-		print("Vittoria!")
-		if current_battle_enemy != null and is_instance_valid(current_battle_enemy):
-			spawn_drop(current_battle_enemy.global_position, current_battle_enemy.drop_item)
-		enemies.erase(current_battle_enemy)
-		current_battle_enemy = null
-		save_mgr.save_game(player)
-		if enemies.is_empty():
-			print("Tutti i nemici sconfitti! Rigenerazione tra 10 secondi...")
-			get_tree().create_timer(10.0).timeout.connect(respawn_enemies)
-	elif was_defeat:
-		print("Sconfitta!")
-		current_battle_enemy = null
+func _on_player_hp_changed(current_hp: int, max_hp: int):
+	if hp_label:
+		hp_label.text = "HP: %d/%d" % [current_hp, max_hp]
+	if current_hp <= 0:
+		player.hp = player.max_hp
+		if hp_label:
+			hp_label.text = "HP: %d/%d" % [player.max_hp, max_hp]
 		save_mgr.save_game(player)
 		game_over_ui_node.show_game_over()
-	else:
-		print("Fuga!")
-		current_battle_enemy = null
-		defeat_cooldown = true
-		get_tree().create_timer(3.0).timeout.connect(func(): defeat_cooldown = false)
-	if forge_node != null:
-		forge_node.can_interact = true
 
 func respawn_enemies():
 	print("Nemici rigenerati!")
@@ -212,6 +196,7 @@ func spawn_drop(pos: Vector2, item_name: String):
 
 func _start_game():
 	player.set_process(true)
+	_on_player_hp_changed(player.hp, player.max_hp)
 
 func _on_role_chosen(role_id: String):
 	player.apply_role(role_id)

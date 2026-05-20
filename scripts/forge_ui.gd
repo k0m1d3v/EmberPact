@@ -100,7 +100,11 @@ func _add_recipe_row(recipe: Dictionary):
 		stat = " [ATK %d]" % recipe["damage"]
 	elif recipe.get("defense", 0) > 0:
 		stat = " [DEF +%d]" % recipe["defense"]
-	info.text = "%s%s\n%s" % [recipe["name"], stat, ", ".join(mats)]
+	var slot_str = ""
+	if recipe["type"] == "weapon":
+		var slot_count = 2 if player_ref != null and player_ref.role == "fabbro" else 1
+		slot_str = "\nSlot: %s" % "○".repeat(slot_count)
+	info.text = "%s%s\n%s%s" % [recipe["name"], stat, ", ".join(mats), slot_str]
 	info.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	hbox.add_child(info)
 
@@ -127,6 +131,9 @@ func _on_forge(recipe: Dictionary):
 			var idx = player_ref.inventory.find(mat_name)
 			if idx >= 0:
 				player_ref.inventory.remove_at(idx)
+	var slot_count = 0
+	if recipe["type"] == "weapon":
+		slot_count = 2 if player_ref.role == "fabbro" else 1
 	var item = {
 		"name": recipe["name"],
 		"type": recipe["type"],
@@ -134,6 +141,8 @@ func _on_forge(recipe: Dictionary):
 		"defense": recipe.get("defense", 0),
 		"essence_slots": [],
 	}
+	for _i in range(slot_count):
+		item["essence_slots"].append(null)
 	player_ref.inventory.append(item)
 	if item["type"] == "weapon":
 		if player_ref.equipped_weapon.is_empty() or item["damage"] > player_ref.equipped_weapon.get("damage", 0):

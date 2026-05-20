@@ -33,6 +33,16 @@ func _ready():
 	btn.pressed.connect(func(): get_tree().reload_current_scene())
 	vbox.add_child(btn)
 
+	var new_game_btn = Button.new()
+	new_game_btn.text = "Nuova Partita"
+	new_game_btn.pressed.connect(func():
+		var dir = DirAccess.open("user://")
+		if dir:
+			dir.remove("save.json")
+		get_tree().reload_current_scene()
+	)
+	vbox.add_child(new_game_btn)
+
 	hide()
 
 func show_game_over():

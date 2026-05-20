@@ -7,11 +7,13 @@ signal inventory_changed(inventory: Array)
 
 var is_moving := false
 var target_position := Vector2.ZERO
+var role: String = ""
 var inventory: Array = []
 var equipped_weapon: Dictionary = {}
 var equipped_armor: Dictionary = {}
 var hp: int = 50
 var max_hp: int = 50
+var base_attack: int = 12
 var base_defense: int = 3
 
 func _ready():
@@ -44,8 +46,18 @@ func get_defense() -> int:
 
 func get_attack() -> int:
 	if not equipped_weapon.is_empty():
-		return equipped_weapon.get("damage", 12)
-	return 12
+		return equipped_weapon.get("damage", base_attack)
+	return base_attack
+
+func apply_role(role_id: String):
+	role = role_id
+	match role_id:
+		"esploratore":
+			max_hp = 50; hp = 50; base_attack = 12; base_defense = 3
+		"fabbro":
+			max_hp = 40; hp = 40; base_attack = 15; base_defense = 2
+		"locandiere":
+			max_hp = 65; hp = 65; base_attack = 8; base_defense = 5
 
 func add_item(item_name: String):
 	inventory.append(item_name)

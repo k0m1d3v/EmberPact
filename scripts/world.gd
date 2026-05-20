@@ -9,6 +9,8 @@ const ItemPickupScript = preload("res://scripts/item_pickup.gd")
 const ForgeScript = preload("res://scripts/forge.gd")
 const ForgeUIScript = preload("res://scripts/forge_ui.gd")
 const GameOverUIScript = preload("res://scripts/game_over_ui.gd")
+const SaveManagerScript = preload("res://scripts/save_manager.gd")
+const RoleSelectUIScript = preload("res://scripts/role_select_ui.gd")
 
 const ENEMY_CONFIGS = [
 	{"enemy_name": "Slime",     "hp": 30, "attack": 8,  "defense": 2, "drop": "Frammento di ferro"},
@@ -32,6 +34,8 @@ var inventory_ui_instance: Node
 var forge_node: Node = null
 var forge_ui_node: Node = null
 var game_over_ui_node: Node = null
+var save_mgr: Node = null
+var role_select_ui: Node = null
 var in_battle := false
 var defeat_cooldown := false
 var enemies: Array = []
@@ -69,6 +73,25 @@ func _ready():
 	game_over_ui_node.set_script(GameOverUIScript)
 	game_over_ui_node.layer = 10
 	add_child(game_over_ui_node)
+
+	save_mgr = Node.new()
+	save_mgr.set_script(SaveManagerScript)
+	add_child(save_mgr)
+
+	role_select_ui = CanvasLayer.new()
+	role_select_ui.set_script(RoleSelectUIScript)
+	role_select_ui.layer = 8
+	add_child(role_select_ui)
+	role_select_ui.role_chosen.connect(_on_role_chosen)
+
+	player.set_process(false)
+
+	if save_mgr.has_save() and save_mgr.load_game(player):
+		_start_game()
+	else:
+		role_select_ui.show_select()
+
+	player.inventory_changed.connect(func(_inv): save_mgr.save_game(player))
 
 func _register_actions():
 	if not InputMap.has_action("interact"):
@@ -135,7 +158,7 @@ func _process(_delta):
 	check_player_enemy_collision()
 
 func check_player_enemy_collision():
-	if defeat_cooldown:
+	if defeat_cooldown or player.role == "":
 		return
 	for enemy in enemies:
 		if not is_instance_valid(enemy):
@@ -159,12 +182,14 @@ func _on_battle_ended(won: bool, was_defeat: bool):
 			spawn_drop(current_battle_enemy.global_position, current_battle_enemy.drop_item)
 		enemies.erase(current_battle_enemy)
 		current_battle_enemy = null
+		save_mgr.save_game(player)
 		if enemies.is_empty():
 			print("Tutti i nemici sconfitti! Rigenerazione tra 10 secondi...")
 			get_tree().create_timer(10.0).timeout.connect(respawn_enemies)
 	elif was_defeat:
 		print("Sconfitta!")
 		current_battle_enemy = null
+		save_mgr.save_game(player)
 		game_over_ui_node.show_game_over()
 	else:
 		print("Fuga!")
@@ -184,3 +209,11 @@ func spawn_drop(pos: Vector2, item_name: String):
 	add_child(pickup)
 	pickup.global_position = pos
 	pickup.item_name = item_name
+
+func _start_game():
+	player.set_process(true)
+
+func _on_role_chosen(role_id: String):
+	player.apply_role(role_id)
+	save_mgr.save_game(player)
+	_start_game()

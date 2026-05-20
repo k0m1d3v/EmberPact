@@ -45,6 +45,12 @@ func update_display(inventory: Array):
 				stat = " [ATK %d]" % item["damage"]
 			elif item.get("defense", 0) > 0:
 				stat = " [DEF +%d]" % item["defense"]
+			var slots = item.get("essence_slots", [])
+			if not slots.is_empty():
+				var slot_str = ""
+				for s in slots:
+					slot_str += "●" if s != null else "○"
+				stat += " %s" % slot_str
 			equip_lines.append("%s%s" % [item.get("name", "?"), stat])
 	var lines: PackedStringArray = []
 	for item_name in counts:

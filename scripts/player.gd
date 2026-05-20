@@ -27,6 +27,14 @@ func _ready():
 	global_position = global_position.snapped(Vector2(TILE_SIZE, TILE_SIZE))
 	target_position = global_position
 
+	var sprite = get_node_or_null("Sprite2D")
+	if sprite:
+		sprite.texture = load("res://assets/sprites/player.png")
+		sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	var color_rect = get_node_or_null("ColorRect")
+	if color_rect:
+		color_rect.visible = false
+
 	attack_flash = ColorRect.new()
 	attack_flash.color = Color(1.0, 0.9, 0.1, 0.7)
 	attack_flash.size = Vector2(14, 14)

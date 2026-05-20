@@ -5,16 +5,15 @@ var player_ref: Node
 var forge_ui_ref: Node
 
 func _ready():
-	var rect = ColorRect.new()
-	rect.color = Color(0.1, 0.2, 0.55)
-	rect.size = Vector2(14, 14)
-	rect.position = Vector2(-7, -7)
-	add_child(rect)
+	var sprite = Sprite2D.new()
+	sprite.texture = load("res://assets/tiles/node_forge.png")
+	sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	add_child(sprite)
 
 	var label = Label.new()
 	label.text = "Forgeria"
 	label.add_theme_font_size_override("font_size", 8)
-	label.position = Vector2(-20, -20)
+	label.position = Vector2(-20, -22)
 	add_child(label)
 
 func setup(player: Node, forge_ui: Node):

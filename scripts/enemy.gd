@@ -20,6 +20,28 @@ const TILE_SIZE := 16
 
 func _ready():
 	global_position = global_position.snapped(Vector2(TILE_SIZE, TILE_SIZE))
+	_setup_visuals()
+
+func _setup_visuals():
+	var color_rect = get_node_or_null("ColorRect")
+	match enemy_name:
+		"Slime":
+			if color_rect:
+				color_rect.visible = false
+			var sprite = Sprite2D.new()
+			sprite.texture = load("res://assets/sprites/enemy_slime.png")
+			sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+			add_child(sprite)
+		"Goblin":
+			if color_rect:
+				color_rect.visible = false
+			var sprite = Sprite2D.new()
+			sprite.texture = load("res://assets/sprites/enemy_goblin.png")
+			sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+			add_child(sprite)
+		_:
+			if color_rect:
+				color_rect.color = Color("#E63946")
 
 func take_damage(amount: int) -> int:
 	var damage = max(1, amount - defense)

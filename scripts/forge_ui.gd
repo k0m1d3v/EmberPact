@@ -117,7 +117,7 @@ func _can_craft(materials: Dictionary) -> bool:
 	for mat_name in materials:
 		var count = 0
 		for item in player_ref.inventory:
-			if item == mat_name:
+			if item is String and item == mat_name:
 				count += 1
 		if count < materials[mat_name]:
 			return false
@@ -128,7 +128,11 @@ func _on_forge(recipe: Dictionary):
 		return
 	for mat_name in recipe["materials"]:
 		for _i in range(recipe["materials"][mat_name]):
-			var idx = player_ref.inventory.find(mat_name)
+			var idx = -1
+			for i in range(player_ref.inventory.size()):
+				if player_ref.inventory[i] is String and player_ref.inventory[i] == mat_name:
+					idx = i
+					break
 			if idx >= 0:
 				player_ref.inventory.remove_at(idx)
 	var slot_count = 0

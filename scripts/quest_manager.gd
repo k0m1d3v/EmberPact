@@ -79,7 +79,7 @@ func accept_quest(quest_id: String):
 	state["completed"] = false
 	active.append(state)
 	quest_accepted.emit(state)
-	NotificationManager.show("Quest accettata: " + state["title"])
+	NotificationManager.notify("Quest accettata: " + state["title"])
 
 func on_enemy_killed(enemy_name: String):
 	_update_progress("kill", enemy_name)
@@ -113,7 +113,7 @@ func _finish_quest(quest: Dictionary):
 	if quest["reward_item"] == "ricetta_martello":
 		PlayerData.hammer_recipe_unlocked = true
 	quest_completed.emit(quest)
-	NotificationManager.show("Quest completata: " + quest["title"] + "!")
+	NotificationManager.notify("Quest completata: " + quest["title"] + "!")
 
 func _find_player() -> Node:
 	var sc = Engine.get_main_loop().current_scene

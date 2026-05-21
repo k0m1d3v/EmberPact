@@ -140,4 +140,4 @@ func add_item(item_name: String):
 	inventory.append(item_name)
 	inventory_changed.emit(inventory)
 	QuestManager.on_item_collected(item_name)
-	NotificationManager.show("+ " + item_name)
+	NotificationManager.notify("+ " + item_name)

@@ -9,8 +9,8 @@ const ITEM_ICON_MAP = {
 	"Spada di ferro":     "res://assets/icons/inv_sword_iron.png",
 	"Armatura di pelle":  "res://assets/icons/inv_armor_leather.png",
 	"Frecce":             "res://assets/icons/inv_feather.png",
-	"Carbone":            "res://assets/icons/inv_coal.png",
-	"Martello":           "res://assets/icons/inv_gem.png",
+	"Carbone":            "res://assets/icons/inv_carbone.png",
+	"Martello":           "res://assets/icons/inv_hammer.png",
 }
 
 var player_ref: Node = null

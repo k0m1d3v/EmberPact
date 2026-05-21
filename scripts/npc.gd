@@ -6,6 +6,7 @@ var action_label: String = ""
 var action_cb: Callable = Callable()
 var pre_interact_cb: Callable = Callable()
 var sprite_color: Color = Color("#6B4F3A")
+var npc_sprite: String = ""
 
 var _in_range: bool = false
 var _dial_idx: int = 0
@@ -21,13 +22,19 @@ var _action_btn: Button = null
 const RANGE := 28.0
 
 func _ready():
-	var cr = ColorRect.new()
-	cr.color = sprite_color
-	cr.offset_left = -8.0
-	cr.offset_top = -8.0
-	cr.offset_right = 8.0
-	cr.offset_bottom = 8.0
-	add_child(cr)
+	if npc_sprite != "":
+		var spr = Sprite2D.new()
+		spr.texture = load(npc_sprite)
+		spr.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		add_child(spr)
+	else:
+		var cr = ColorRect.new()
+		cr.color = sprite_color
+		cr.offset_left = -8.0
+		cr.offset_top = -8.0
+		cr.offset_right = 8.0
+		cr.offset_bottom = 8.0
+		add_child(cr)
 
 	var head_lbl = Label.new()
 	head_lbl.text = npc_name
@@ -40,6 +47,13 @@ func _ready():
 
 	_build_dialogue_ui()
 	call_deferred("_init_area")
+
+func set_quest_indicator(icon_path: String):
+	var icon = Sprite2D.new()
+	icon.texture = load(icon_path)
+	icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	icon.position = Vector2(0, -22)
+	add_child(icon)
 
 func _init_area():
 	var sc = get_tree().current_scene
@@ -79,7 +93,7 @@ func _build_dialogue_ui():
 	add_child(_canvas)
 
 	var panel = NinePatchRect.new()
-	panel.texture = load("res://assets/ui/panel_inventory_9p.png")
+	panel.texture = load("res://assets/ui/panel_dialogue_9p.png")
 	panel.patch_margin_left = 6
 	panel.patch_margin_right = 6
 	panel.patch_margin_top = 6

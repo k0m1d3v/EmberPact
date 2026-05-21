@@ -5,6 +5,9 @@ const TILE_PATH  := Vector2i(1, 0)
 const TILE_WATER := Vector2i(2, 0)
 const TILE_ROCK  := Vector2i(3, 0)
 const TILE_DUNG  := Vector2i(4, 0)
+# Individual tile sources added to tileset (source indices 1 and 2)
+const TILE_ROAD  := Vector2i(0, 0)  # source 1: tile_town_road.png
+const TILE_WALL  := Vector2i(0, 0)  # source 2: tile_wall_rock.png
 
 func get_zone_name() -> String:
 	return "Città"
@@ -28,12 +31,26 @@ func _on_first_run():
 func _setup_tilemap():
 	var tileset = TileSet.new()
 	tileset.tile_size = Vector2i(16, 16)
+
 	var src = TileSetAtlasSource.new()
 	src.texture = load("res://assets/tiles/tileset_atlas.png")
 	src.texture_region_size = Vector2i(16, 16)
 	for col in range(6):
 		src.create_tile(Vector2i(col, 0))
 	tileset.add_source(src, 0)
+
+	var src_road = TileSetAtlasSource.new()
+	src_road.texture = load("res://assets/tiles/tile_town_road.png")
+	src_road.texture_region_size = Vector2i(16, 16)
+	src_road.create_tile(Vector2i(0, 0))
+	tileset.add_source(src_road, 1)
+
+	var src_wall = TileSetAtlasSource.new()
+	src_wall.texture = load("res://assets/tiles/tile_wall_rock.png")
+	src_wall.texture_region_size = Vector2i(16, 16)
+	src_wall.create_tile(Vector2i(0, 0))
+	tileset.add_source(src_wall, 2)
+
 	tilemap.tile_set = tileset
 
 	# Fill grass base
@@ -43,11 +60,11 @@ func _setup_tilemap():
 
 	# Main E-W path at y = 0
 	for x in range(-20, 21):
-		tilemap.set_cell(Vector2i(x, 0), 0, TILE_PATH)
+		tilemap.set_cell(Vector2i(x, 0), 1, TILE_ROAD)
 
 	# N-S path at x = 0
 	for y in range(-15, 16):
-		tilemap.set_cell(Vector2i(0, y), 0, TILE_PATH)
+		tilemap.set_cell(Vector2i(0, y), 1, TILE_ROAD)
 
 	# Fountain (water) near center, offset from paths
 	for dx in range(-2, 1):
@@ -56,27 +73,27 @@ func _setup_tilemap():
 
 	# House outlines NW
 	for x in range(-18, -12):
-		tilemap.set_cell(Vector2i(x, -13), 0, TILE_ROCK)
-		tilemap.set_cell(Vector2i(x, -9),  0, TILE_ROCK)
+		tilemap.set_cell(Vector2i(x, -13), 2, TILE_WALL)
+		tilemap.set_cell(Vector2i(x, -9),  2, TILE_WALL)
 	for y in range(-13, -8):
-		tilemap.set_cell(Vector2i(-18, y), 0, TILE_ROCK)
-		tilemap.set_cell(Vector2i(-12, y), 0, TILE_ROCK)
+		tilemap.set_cell(Vector2i(-18, y), 2, TILE_WALL)
+		tilemap.set_cell(Vector2i(-12, y), 2, TILE_WALL)
 
 	# House outlines NE
 	for x in range(12, 19):
-		tilemap.set_cell(Vector2i(x, -13), 0, TILE_ROCK)
-		tilemap.set_cell(Vector2i(x, -9),  0, TILE_ROCK)
+		tilemap.set_cell(Vector2i(x, -13), 2, TILE_WALL)
+		tilemap.set_cell(Vector2i(x, -9),  2, TILE_WALL)
 	for y in range(-13, -8):
-		tilemap.set_cell(Vector2i(12, y), 0, TILE_ROCK)
-		tilemap.set_cell(Vector2i(18, y), 0, TILE_ROCK)
+		tilemap.set_cell(Vector2i(12, y), 2, TILE_WALL)
+		tilemap.set_cell(Vector2i(18, y), 2, TILE_WALL)
 
 	# House outlines SW
 	for x in range(-18, -12):
-		tilemap.set_cell(Vector2i(x, 6),  0, TILE_ROCK)
-		tilemap.set_cell(Vector2i(x, 12), 0, TILE_ROCK)
+		tilemap.set_cell(Vector2i(x, 6),  2, TILE_WALL)
+		tilemap.set_cell(Vector2i(x, 12), 2, TILE_WALL)
 	for y in range(6, 13):
-		tilemap.set_cell(Vector2i(-18, y), 0, TILE_ROCK)
-		tilemap.set_cell(Vector2i(-12, y), 0, TILE_ROCK)
+		tilemap.set_cell(Vector2i(-18, y), 2, TILE_WALL)
+		tilemap.set_cell(Vector2i(-12, y), 2, TILE_WALL)
 
 	# Dungeon entrance marker at east border
 	for y in range(-1, 2):
@@ -87,9 +104,17 @@ func _setup_tilemap():
 
 func _setup_zone():
 	set_camera_limits(-320, -240, 336, 256)
+	_add_fountain()
 	_add_forge()
 	_add_npcs()
 	_add_exits()
+
+func _add_fountain():
+	var spr = Sprite2D.new()
+	spr.texture = load("res://assets/sprites/prop_fountain.png")
+	spr.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	spr.global_position = Vector2(-16, -48)
+	add_child(spr)
 
 func _add_forge():
 	forge_node = Node2D.new()
@@ -102,6 +127,7 @@ func _add_forge():
 func _add_npcs():
 	# Fabbro Aldric
 	var aldric = make_npc("Aldric", Vector2(96, -80), Color("#8B6914"))
+	aldric.npc_sprite = "res://assets/sprites/npc_aldric.png"
 	aldric.dialogues = [
 		"Servo il miglior acciaio di queste terre.",
 		"Portami minerali e ti forgerò qualcosa di speciale.",
@@ -129,9 +155,12 @@ func _add_npcs():
 				aldric.action_cb = Callable()
 				if aldric._action_btn:
 					aldric._action_btn.visible = false)
+	if not QuestManager.is_done("quest_03"):
+		aldric.set_quest_indicator("res://assets/ui/icon_quest_new.png")
 
 	# Anziano del villaggio
 	var anziano = make_npc("Anziano", Vector2(0, -96), Color("#9C7C54"))
+	anziano.npc_sprite = "res://assets/sprites/npc_anziano.png"
 	anziano.dialogues = [
 		"Ember Pact... un antico accordo tra tre gilde.",
 		"Il Locandiere che nutre, il Fabbro che forgia, l'Esploratore che scopre.",
@@ -156,9 +185,12 @@ func _add_npcs():
 				anziano.action_cb = Callable()
 				if anziano._action_btn:
 					anziano._action_btn.visible = false)
+	if not QuestManager.is_done("quest_01"):
+		anziano.set_quest_indicator("res://assets/ui/icon_quest_new.png")
 
 	# Guardia (east side, near mine entrance)
 	var guardia = make_npc("Guardia", Vector2(256, 0), Color("#4A5568"))
+	guardia.npc_sprite = "res://assets/sprites/npc_guardia.png"
 	guardia.pre_interact_cb = func():
 		if player.get_attack() >= 15:
 			guardia.dialogues = ["Sei armato. Passa pure, avventuriero."]

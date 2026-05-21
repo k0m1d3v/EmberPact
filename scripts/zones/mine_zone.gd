@@ -25,12 +25,20 @@ func get_spawn_pos(spawn_id: String) -> Vector2:
 func _setup_tilemap():
 	var tileset = TileSet.new()
 	tileset.tile_size = Vector2i(16, 16)
+
 	var src = TileSetAtlasSource.new()
 	src.texture = load("res://assets/tiles/tileset_atlas.png")
 	src.texture_region_size = Vector2i(16, 16)
 	for col in range(6):
 		src.create_tile(Vector2i(col, 0))
 	tileset.add_source(src, 0)
+
+	var src_floor = TileSetAtlasSource.new()
+	src_floor.texture = load("res://assets/tiles/tile_mine_floor.png")
+	src_floor.texture_region_size = Vector2i(16, 16)
+	src_floor.create_tile(Vector2i(0, 0))
+	tileset.add_source(src_floor, 1)
+
 	tilemap.tile_set = tileset
 
 	# Fill rock base (40x40 tiles)
@@ -41,13 +49,13 @@ func _setup_tilemap():
 	# Main tunnel N-S
 	for y in range(-20, 21):
 		for dx in range(-2, 3):
-			tilemap.set_cell(Vector2i(dx, y), 0, TILE_PATH)
+			tilemap.set_cell(Vector2i(dx, y), 1, Vector2i(0, 0))
 
 	# Side tunnels
 	for x in range(-20, 21):
 		for dy in range(-1, 2):
-			tilemap.set_cell(Vector2i(x, dy - 8), 0, TILE_PATH)
-			tilemap.set_cell(Vector2i(x, dy + 8), 0, TILE_PATH)
+			tilemap.set_cell(Vector2i(x, dy - 8), 1, Vector2i(0, 0))
+			tilemap.set_cell(Vector2i(x, dy + 8), 1, Vector2i(0, 0))
 
 	# Ore veins (dungeon entrance tile used as ore marker)
 	var ore_spots = [
@@ -80,10 +88,10 @@ func _add_torches():
 		Vector2(-128, -8), Vector2(128, -8),
 	]
 	for tp in torch_positions:
-		var torch = ColorRect.new()
-		torch.color = Color("#FFD700")
-		torch.size = Vector2(6, 6)
-		torch.position = tp - Vector2(3, 3)
+		var torch = Sprite2D.new()
+		torch.texture = load("res://assets/sprites/prop_torch.png")
+		torch.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		torch.global_position = tp
 		add_child(torch)
 
 func _add_ore_pickups():

@@ -8,20 +8,17 @@ var _is_open: bool = false
 const RANGE := 28.0
 
 func _ready():
-	var cr = ColorRect.new()
-	cr.color = Color("#6B4226")
-	cr.offset_left = -8.0
-	cr.offset_top = -16.0
-	cr.offset_right = 8.0
-	cr.offset_bottom = 8.0
-	add_child(cr)
+	var spr = Sprite2D.new()
+	spr.texture = load("res://assets/sprites/prop_quest_board.png")
+	spr.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	add_child(spr)
 
 	var lbl = Label.new()
 	lbl.text = "Bacheca"
 	lbl.add_theme_font_size_override("font_size", 7)
 	lbl.add_theme_color_override("font_color", Color("#F5E6C8"))
 	lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	lbl.position = Vector2(-24, -30)
+	lbl.position = Vector2(-24, -22)
 	lbl.custom_minimum_size = Vector2(48, 10)
 	add_child(lbl)
 
@@ -169,8 +166,14 @@ func _add_row(quest: Dictionary, status: String):
 	elif reward_item == "ricetta_martello":
 		reward_str = "Ricompensa: ricetta Martello"
 
+	var icon_tex = TextureRect.new()
+	icon_tex.custom_minimum_size = Vector2(12, 12)
+	icon_tex.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	icon_tex.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+
 	match status:
 		"available":
+			icon_tex.texture = load("res://assets/ui/icon_quest_new.png")
 			info.text = "%s\n%s x%d  |  %s" % [title, target, count, reward_str]
 			info.add_theme_color_override("font_color", Color("#F5E6C8"))
 			var btn = Button.new()
@@ -178,15 +181,20 @@ func _add_row(quest: Dictionary, status: String):
 			btn.add_theme_font_size_override("font_size", 9)
 			var qid = quest["id"]
 			btn.pressed.connect(func(): QuestManager.accept_quest(qid); _refresh())
+			hbox.add_child(icon_tex)
 			hbox.add_child(info)
 			hbox.add_child(btn)
 		"active":
+			icon_tex.texture = load("res://assets/ui/icon_quest_new.png")
 			info.text = "%s\n%s %d/%d" % [title, target, current, count]
 			info.add_theme_color_override("font_color", Color("#F4A261"))
+			hbox.add_child(icon_tex)
 			hbox.add_child(info)
 		"done":
-			info.text = "[OK] " + title
+			icon_tex.texture = load("res://assets/ui/icon_quest_done.png")
+			info.text = title
 			info.add_theme_color_override("font_color", Color("#5BBA6F"))
+			hbox.add_child(icon_tex)
 			hbox.add_child(info)
 
 func _close():

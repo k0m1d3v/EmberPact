@@ -20,18 +20,26 @@ func get_spawn_pos(spawn_id: String) -> Vector2:
 func _setup_tilemap():
 	var tileset = TileSet.new()
 	tileset.tile_size = Vector2i(16, 16)
+
 	var src = TileSetAtlasSource.new()
 	src.texture = load("res://assets/tiles/tileset_atlas.png")
 	src.texture_region_size = Vector2i(16, 16)
 	for col in range(6):
 		src.create_tile(Vector2i(col, 0))
 	tileset.add_source(src, 0)
+
+	var src_floor = TileSetAtlasSource.new()
+	src_floor.texture = load("res://assets/tiles/tile_inn_floor.png")
+	src_floor.texture_region_size = Vector2i(16, 16)
+	src_floor.create_tile(Vector2i(0, 0))
+	tileset.add_source(src_floor, 1)
+
 	tilemap.tile_set = tileset
 
-	# Floor: stone path tiles (30x20)
+	# Floor: inn floor tiles (30x20)
 	for x in range(-15, 16):
 		for y in range(-10, 11):
-			tilemap.set_cell(Vector2i(x, y), 0, TILE_PATH)
+			tilemap.set_cell(Vector2i(x, y), 1, Vector2i(0, 0))
 
 	# Outer walls
 	for x in range(-15, 16):
@@ -61,6 +69,7 @@ func _setup_zone():
 func _add_npcs():
 	# Marta the innkeeper
 	var marta = make_npc("Marta", Vector2(-48, -48), Color("#A0522D"))
+	marta.npc_sprite = "res://assets/sprites/npc_marta.png"
 	marta.dialogues = [
 		"Benvenuto alla Locanda del Focolare!",
 		"Posso ripristinare i tuoi HP per 5 Monete di rame.",

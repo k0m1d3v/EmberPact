@@ -14,6 +14,8 @@ var attack_cooldown := 0.0
 var attack_flash: ColorRect = null
 var forge_ref: Node = null
 var inv_ref: Node = null
+var npc_near: Node = null
+var is_in_dialogue: bool = false
 
 var role: String = ""
 var inventory: Array = []
@@ -47,16 +49,22 @@ func _process(delta):
 	if attack_cooldown > 0.0:
 		attack_cooldown -= delta
 
+	if is_in_dialogue:
+		return
+
 	var near_forge = forge_ref != null and forge_ref.can_interact and \
 		global_position.distance_to(forge_ref.global_position) < 24
+	var near_npc = npc_near != null and is_instance_valid(npc_near)
 	var inv_open = inv_ref != null and inv_ref.visible
 
-	# E: close inventory > open inventory (forge handled by forge.gd)
-	if Input.is_action_just_pressed("interact") and not near_forge:
-		if inv_open:
-			inv_ref.hide()
-		elif inv_ref != null:
-			inv_ref.show_panel()
+	if Input.is_action_just_pressed("interact"):
+		if near_npc:
+			npc_near.interact()
+		elif not near_forge:
+			if inv_open:
+				inv_ref.hide()
+			elif inv_ref != null:
+				inv_ref.show_panel()
 
 	# Space/click: attack only when inventory is closed
 	if Input.is_action_just_pressed("attack") and attack_cooldown <= 0.0 and not inv_open:
@@ -130,6 +138,6 @@ func apply_role(role_id: String):
 
 func add_item(item_name: String):
 	inventory.append(item_name)
-	print("Raccolto: %s" % item_name)
-	print("Inventario: ", inventory)
 	inventory_changed.emit(inventory)
+	QuestManager.on_item_collected(item_name)
+	NotificationManager.show("+ " + item_name)

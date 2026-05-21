@@ -30,7 +30,11 @@ func _ready():
 
 	var btn = Button.new()
 	btn.text = "Riprova"
-	btn.pressed.connect(func(): get_tree().reload_current_scene())
+	btn.pressed.connect(func():
+		PlayerData.current_scene = "res://scenes/world/town.tscn"
+		PlayerData.spawn_point = "default"
+		hide()
+		SceneManager.change_scene("res://scenes/world/town.tscn", "default"))
 	vbox.add_child(btn)
 
 	var new_game_btn = Button.new()
@@ -39,8 +43,10 @@ func _ready():
 		var dir = DirAccess.open("user://")
 		if dir:
 			dir.remove("save.json")
-		get_tree().reload_current_scene()
-	)
+		PlayerData.reset()
+		QuestManager.reset()
+		hide()
+		SceneManager.change_scene("res://scenes/world/town.tscn", "default"))
 	vbox.add_child(new_game_btn)
 
 	hide()

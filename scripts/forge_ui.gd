@@ -1,6 +1,6 @@
 extends CanvasLayer
 
-const RECIPES = [
+const BASE_RECIPES = [
 	{
 		"name": "Spada di ferro",
 		"type": "weapon",
@@ -24,10 +24,25 @@ const RECIPES = [
 	},
 ]
 
+const RECIPE_MARTELLO = {
+	"name": "Martello",
+	"type": "weapon",
+	"damage": 22,
+	"defense": 0,
+	"materials": {"Frammento di ferro": 2, "Carbone": 1},
+}
+
+func _get_recipes() -> Array:
+	var list = BASE_RECIPES.duplicate()
+	if PlayerData.hammer_recipe_unlocked:
+		list.append(RECIPE_MARTELLO)
+	return list
+
 const RECIPE_ICONS = {
 	"Spada di ferro":    "res://assets/forge/recipe_sword_iron.png",
 	"Armatura di pelle": "res://assets/forge/recipe_armor_leather.png",
 	"Frecce":            "res://assets/forge/recipe_arrows.png",
+	"Martello":          "res://assets/forge/recipe_hammer.png",
 }
 
 var player_ref: Node
@@ -103,7 +118,7 @@ func _refresh_recipes():
 		return
 
 	var any_available = false
-	for recipe in RECIPES:
+	for recipe in _get_recipes():
 		if _can_craft(recipe["materials"]):
 			any_available = true
 			_add_recipe_row(recipe)

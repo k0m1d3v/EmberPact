@@ -22,8 +22,12 @@ var materials_label: Label
 func _ready():
 	layer = 5
 
-	var bg = ColorRect.new()
-	bg.color = Color(0.1, 0.1, 0.11, 0.95)
+	var bg = NinePatchRect.new()
+	bg.texture = load("res://assets/ui/panel_inventory_9p.png")
+	bg.patch_margin_left = 6
+	bg.patch_margin_right = 6
+	bg.patch_margin_top = 6
+	bg.patch_margin_bottom = 6
 	bg.anchor_left = 0.5
 	bg.anchor_top = 0.0
 	bg.anchor_right = 1.0
@@ -117,26 +121,34 @@ func _process(_delta):
 		hide()
 
 func _make_equip_panel(slot_type: String) -> Dictionary:
-	var panel = Panel.new()
-	panel.custom_minimum_size = Vector2(80, 44)
+	var panel = NinePatchRect.new()
+	panel.texture = load("res://assets/ui/panel_inventory_9p.png")
+	panel.patch_margin_left = 4
+	panel.patch_margin_right = 4
+	panel.patch_margin_top = 4
+	panel.patch_margin_bottom = 4
+	panel.custom_minimum_size = Vector2(80, 52)
 	panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 
 	var vb = VBoxContainer.new()
 	vb.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	vb.add_theme_constant_override("margin_left", 4)
+	vb.add_theme_constant_override("separation", 2)
 	panel.add_child(vb)
 
 	var type_lbl = Label.new()
 	type_lbl.text = slot_type
 	type_lbl.add_theme_font_size_override("font_size", 8)
-	type_lbl.add_theme_color_override("font_color", Color("#A88A50"))
+	type_lbl.add_theme_color_override("font_color", Color("#C8A96E"))
+	type_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	vb.add_child(type_lbl)
 
 	var hbox = HBoxContainer.new()
+	hbox.add_theme_constant_override("separation", 4)
+	hbox.alignment = BoxContainer.ALIGNMENT_CENTER
 	vb.add_child(hbox)
 
 	var icon = TextureRect.new()
-	icon.custom_minimum_size = Vector2(16, 16)
+	icon.custom_minimum_size = Vector2(20, 20)
 	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	hbox.add_child(icon)
@@ -234,13 +246,15 @@ func _update_equip_slot(icon: TextureRect, lbl: Label, item: Dictionary, is_armo
 	if item.is_empty():
 		icon.texture = null
 		lbl.text = "— vuoto —"
+		lbl.add_theme_color_override("font_color", Color("#A88A50"))
 		return
 	var item_name = item.get("name", "?")
 	var icon_path = ITEM_ICON_MAP.get(item_name, "res://assets/icons/inv_gem.png")
 	icon.texture = load(icon_path)
 	var stat_val = item.get("defense", 0) if is_armor else item.get("damage", 0)
-	var stat_str = "DEF +%d" % stat_val if is_armor else "ATK %d" % stat_val
+	var stat_str = "[DEF +%d]" % stat_val if is_armor else "[ATK %d]" % stat_val
 	lbl.text = "%s\n%s" % [item_name, stat_str]
+	lbl.add_theme_color_override("font_color", Color("#5BBA6F") if is_armor else Color("#F4A261"))
 
 func _fill_slot(slot: NinePatchRect, item_name: String, qty: int):
 	var icon = slot.get_node_or_null("Icon") as TextureRect

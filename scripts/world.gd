@@ -33,12 +33,9 @@ var forge_ui_node: Node = null
 var game_over_ui_node: Node = null
 var save_mgr: Node = null
 var role_select_ui: Node = null
-var heart_sprites: Array = []
-var heart_full_tex: Texture2D = null
-var heart_empty_tex: Texture2D = null
+var hp_bar_fill: ColorRect = null
+var hp_text_label: Label = null
 var enemies: Array = []
-
-const HEART_COUNT = 5
 
 func _ready():
 	_register_actions()
@@ -78,24 +75,35 @@ func _ready():
 	add_child(role_select_ui)
 	role_select_ui.role_chosen.connect(_on_role_chosen)
 
-	heart_full_tex = load("res://assets/ui/hp_heart_full.png")
-	heart_empty_tex = load("res://assets/ui/hp_heart_empty.png")
-
 	var hp_layer = CanvasLayer.new()
 	hp_layer.layer = 1
 	add_child(hp_layer)
-	var hearts_hbox = HBoxContainer.new()
-	hearts_hbox.position = Vector2(8, 8)
-	hearts_hbox.add_theme_constant_override("separation", 2)
-	hp_layer.add_child(hearts_hbox)
-	for _i in HEART_COUNT:
-		var heart = TextureRect.new()
-		heart.texture = heart_full_tex
-		heart.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-		heart.custom_minimum_size = Vector2(16, 16)
-		heart.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-		hearts_hbox.add_child(heart)
-		heart_sprites.append(heart)
+	var hp_hbox = HBoxContainer.new()
+	hp_hbox.position = Vector2(8, 8)
+	hp_hbox.add_theme_constant_override("separation", 4)
+	hp_layer.add_child(hp_hbox)
+
+	var heart_icon = TextureRect.new()
+	heart_icon.texture = load("res://assets/ui/hp_heart_full.png")
+	heart_icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	heart_icon.custom_minimum_size = Vector2(16, 16)
+	heart_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	hp_hbox.add_child(heart_icon)
+
+	var bar_bg = ColorRect.new()
+	bar_bg.color = Color(0.15, 0.08, 0.08, 0.85)
+	bar_bg.custom_minimum_size = Vector2(80, 10)
+	hp_hbox.add_child(bar_bg)
+
+	hp_bar_fill = ColorRect.new()
+	hp_bar_fill.color = Color("#C1121F")
+	hp_bar_fill.size = Vector2(80, 10)
+	bar_bg.add_child(hp_bar_fill)
+
+	hp_text_label = Label.new()
+	hp_text_label.add_theme_font_size_override("font_size", 9)
+	hp_text_label.add_theme_color_override("font_color", Color("#F5E6C8"))
+	hp_hbox.add_child(hp_text_label)
 
 	player.hp_changed.connect(_on_player_hp_changed)
 	player.attacked.connect(_on_player_attacked)
@@ -119,6 +127,15 @@ func _register_actions():
 		var ev2 = InputEventKey.new()
 		ev2.keycode = KEY_SPACE
 		InputMap.action_add_event("attack", ev2)
+		var mb = InputEventMouseButton.new()
+		mb.button_index = MOUSE_BUTTON_LEFT
+		InputMap.action_add_event("attack", mb)
+	if not InputMap.has_action("wasd_setup"):
+		InputMap.add_action("wasd_setup")
+		for pair in [["ui_right", KEY_D], ["ui_left", KEY_A], ["ui_down", KEY_S], ["ui_up", KEY_W]]:
+			var ev3 = InputEventKey.new()
+			ev3.keycode = pair[1]
+			InputMap.action_add_event(pair[0], ev3)
 
 func generate_world():
 	var tileset = TileSet.new()
@@ -183,14 +200,16 @@ func _on_enemy_died(pos: Vector2, drop: String, enemy_node: Node):
 		get_tree().create_timer(10.0).timeout.connect(respawn_enemies)
 
 func _on_player_hp_changed(current_hp: int, max_hp: int):
-	if not heart_sprites.is_empty() and max_hp > 0:
-		var full = int(ceil(float(current_hp) * HEART_COUNT / float(max_hp)))
-		for i in HEART_COUNT:
-			heart_sprites[i].texture = heart_full_tex if i < full else heart_empty_tex
+	if hp_bar_fill != null and max_hp > 0:
+		hp_bar_fill.size.x = 80.0 * float(max(current_hp, 0)) / float(max_hp)
+	if hp_text_label != null:
+		hp_text_label.text = "%d/%d" % [max(current_hp, 0), max_hp]
 	if current_hp <= 0:
 		player.hp = player.max_hp
-		for i in HEART_COUNT:
-			heart_sprites[i].texture = heart_full_tex
+		if hp_bar_fill != null:
+			hp_bar_fill.size.x = 80.0
+		if hp_text_label != null:
+			hp_text_label.text = "%d/%d" % [player.max_hp, player.max_hp]
 		save_mgr.save_game(player)
 		game_over_ui_node.show_game_over()
 

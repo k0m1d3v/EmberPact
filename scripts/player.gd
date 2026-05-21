@@ -58,9 +58,15 @@ func _process(delta):
 		elif inv_ref != null:
 			inv_ref.show_panel()
 
-	# Space: attack only when inventory is closed
+	# Space/click: attack only when inventory is closed
 	if Input.is_action_just_pressed("attack") and attack_cooldown <= 0.0 and not inv_open:
 		attack_cooldown = 0.4
+		if Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
+			var diff = get_global_mouse_position() - global_position
+			if abs(diff.x) >= abs(diff.y):
+				last_direction = Vector2(sign(diff.x), 0)
+			else:
+				last_direction = Vector2(0, sign(diff.y))
 		attacked.emit(global_position + last_direction * TILE_SIZE)
 		_show_attack_flash()
 

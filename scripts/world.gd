@@ -33,9 +33,12 @@ var forge_ui_node: Node = null
 var game_over_ui_node: Node = null
 var save_mgr: Node = null
 var role_select_ui: Node = null
-var hp_label: Label = null
-var hp_bar_fill: ColorRect = null
+var heart_sprites: Array = []
+var heart_full_tex: Texture2D = null
+var heart_empty_tex: Texture2D = null
 var enemies: Array = []
+
+const HEART_COUNT = 5
 
 func _ready():
 	_register_actions()
@@ -45,7 +48,9 @@ func _ready():
 	inventory_ui_instance = CanvasLayer.new()
 	inventory_ui_instance.set_script(load("res://scripts/inventory_ui.gd"))
 	add_child(inventory_ui_instance)
+	inventory_ui_instance.player_ref = player
 	player.inventory_changed.connect(inventory_ui_instance.update_display)
+	player.inv_ref = inventory_ui_instance
 
 	forge_ui_node = CanvasLayer.new()
 	forge_ui_node.set_script(ForgeUIScript)
@@ -73,23 +78,24 @@ func _ready():
 	add_child(role_select_ui)
 	role_select_ui.role_chosen.connect(_on_role_chosen)
 
+	heart_full_tex = load("res://assets/ui/hp_heart_full.png")
+	heart_empty_tex = load("res://assets/ui/hp_heart_empty.png")
+
 	var hp_layer = CanvasLayer.new()
 	hp_layer.layer = 1
 	add_child(hp_layer)
-	var hp_bg = ColorRect.new()
-	hp_bg.color = Color("#4A0000")
-	hp_bg.size = Vector2(84, 10)
-	hp_bg.position = Vector2(8, 8)
-	hp_layer.add_child(hp_bg)
-	hp_bar_fill = ColorRect.new()
-	hp_bar_fill.color = Color("#E63946")
-	hp_bar_fill.size = Vector2(84, 10)
-	hp_bar_fill.position = Vector2(8, 8)
-	hp_layer.add_child(hp_bar_fill)
-	hp_label = Label.new()
-	hp_label.position = Vector2(8, 20)
-	hp_label.add_theme_font_size_override("font_size", 10)
-	hp_layer.add_child(hp_label)
+	var hearts_hbox = HBoxContainer.new()
+	hearts_hbox.position = Vector2(8, 8)
+	hearts_hbox.add_theme_constant_override("separation", 2)
+	hp_layer.add_child(hearts_hbox)
+	for _i in HEART_COUNT:
+		var heart = TextureRect.new()
+		heart.texture = heart_full_tex
+		heart.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		heart.custom_minimum_size = Vector2(16, 16)
+		heart.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		hearts_hbox.add_child(heart)
+		heart_sprites.append(heart)
 
 	player.hp_changed.connect(_on_player_hp_changed)
 	player.attacked.connect(_on_player_attacked)
@@ -177,16 +183,14 @@ func _on_enemy_died(pos: Vector2, drop: String, enemy_node: Node):
 		get_tree().create_timer(10.0).timeout.connect(respawn_enemies)
 
 func _on_player_hp_changed(current_hp: int, max_hp: int):
-	if hp_label:
-		hp_label.text = "%d / %d" % [current_hp, max_hp]
-	if hp_bar_fill and max_hp > 0:
-		hp_bar_fill.size.x = 84.0 * float(current_hp) / float(max_hp)
+	if not heart_sprites.is_empty() and max_hp > 0:
+		var full = int(ceil(float(current_hp) * HEART_COUNT / float(max_hp)))
+		for i in HEART_COUNT:
+			heart_sprites[i].texture = heart_full_tex if i < full else heart_empty_tex
 	if current_hp <= 0:
 		player.hp = player.max_hp
-		if hp_label:
-			hp_label.text = "%d / %d" % [player.max_hp, max_hp]
-		if hp_bar_fill:
-			hp_bar_fill.size.x = 84.0
+		for i in HEART_COUNT:
+			heart_sprites[i].texture = heart_full_tex
 		save_mgr.save_game(player)
 		game_over_ui_node.show_game_over()
 

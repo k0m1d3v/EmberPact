@@ -13,6 +13,7 @@ var last_direction := Vector2(1, 0)
 var attack_cooldown := 0.0
 var attack_flash: ColorRect = null
 var forge_ref: Node = null
+var inv_ref: Node = null
 
 var role: String = ""
 var inventory: Array = []
@@ -48,10 +49,17 @@ func _process(delta):
 
 	var near_forge = forge_ref != null and forge_ref.can_interact and \
 		global_position.distance_to(forge_ref.global_position) < 24
-	var want_attack = (Input.is_action_just_pressed("interact") and not near_forge) or \
-		Input.is_action_just_pressed("attack")
+	var inv_open = inv_ref != null and inv_ref.visible
 
-	if want_attack and attack_cooldown <= 0.0:
+	# E: close inventory > open inventory (forge handled by forge.gd)
+	if Input.is_action_just_pressed("interact") and not near_forge:
+		if inv_open:
+			inv_ref.hide()
+		elif inv_ref != null:
+			inv_ref.show_panel()
+
+	# Space: attack only when inventory is closed
+	if Input.is_action_just_pressed("attack") and attack_cooldown <= 0.0 and not inv_open:
 		attack_cooldown = 0.4
 		attacked.emit(global_position + last_direction * TILE_SIZE)
 		_show_attack_flash()

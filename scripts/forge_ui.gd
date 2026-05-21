@@ -24,6 +24,12 @@ const RECIPES = [
 	},
 ]
 
+const RECIPE_ICONS = {
+	"Spada di ferro":    "res://assets/forge/recipe_sword_iron.png",
+	"Armatura di pelle": "res://assets/forge/recipe_armor_leather.png",
+	"Frecce":            "res://assets/forge/recipe_arrows.png",
+}
+
 var player_ref: Node
 var recipe_container: VBoxContainer
 
@@ -43,11 +49,32 @@ func _ready():
 	vbox.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	panel.add_child(vbox)
 
+	# Header with icons
+	var header = HBoxContainer.new()
+	header.alignment = BoxContainer.ALIGNMENT_CENTER
+	header.add_theme_constant_override("separation", 6)
+
+	var anvil = TextureRect.new()
+	anvil.texture = load("res://assets/forge/anvil.png")
+	anvil.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	anvil.custom_minimum_size = Vector2(16, 16)
+	anvil.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	header.add_child(anvil)
+
 	var title = Label.new()
 	title.text = "Forgeria"
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	vbox.add_child(title)
+	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	header.add_child(title)
 
+	var flame = TextureRect.new()
+	flame.texture = load("res://assets/forge/flame.png")
+	flame.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	flame.custom_minimum_size = Vector2(16, 16)
+	flame.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	header.add_child(flame)
+
+	vbox.add_child(header)
 	vbox.add_child(HSeparator.new())
 
 	recipe_container = VBoxContainer.new()
@@ -89,7 +116,17 @@ func _refresh_recipes():
 
 func _add_recipe_row(recipe: Dictionary):
 	var hbox = HBoxContainer.new()
+	hbox.add_theme_constant_override("separation", 6)
 	recipe_container.add_child(hbox)
+
+	var icon_path = RECIPE_ICONS.get(recipe["name"], "")
+	if icon_path != "":
+		var icon = TextureRect.new()
+		icon.texture = load(icon_path)
+		icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		icon.custom_minimum_size = Vector2(16, 16)
+		icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		hbox.add_child(icon)
 
 	var info = Label.new()
 	var mats: PackedStringArray = []

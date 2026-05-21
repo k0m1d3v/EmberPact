@@ -68,14 +68,14 @@ func _ready():
 
 	var eq_row = HBoxContainer.new()
 	eq_row.add_theme_constant_override("separation", 6)
-	var wpn_panel = _make_equip_panel("ARMA")
-	weapon_icon = wpn_panel.get_node("HBox/Icon")
-	weapon_label = wpn_panel.get_node("HBox/Lbl")
-	eq_row.add_child(wpn_panel)
-	var arm_panel = _make_equip_panel("ARMATURA")
-	armor_icon = arm_panel.get_node("HBox/Icon")
-	armor_label = arm_panel.get_node("HBox/Lbl")
-	eq_row.add_child(arm_panel)
+	var wpn_data = _make_equip_panel("ARMA")
+	weapon_icon = wpn_data["icon"]
+	weapon_label = wpn_data["label"]
+	eq_row.add_child(wpn_data["panel"])
+	var arm_data = _make_equip_panel("ARMATURA")
+	armor_icon = arm_data["icon"]
+	armor_label = arm_data["label"]
+	eq_row.add_child(arm_data["panel"])
 	vbox.add_child(eq_row)
 	vbox.add_child(HSeparator.new())
 
@@ -116,7 +116,7 @@ func _process(_delta):
 	if visible and Input.is_action_just_pressed("ui_cancel"):
 		hide()
 
-func _make_equip_panel(slot_type: String) -> Panel:
+func _make_equip_panel(slot_type: String) -> Dictionary:
 	var panel = Panel.new()
 	panel.custom_minimum_size = Vector2(80, 44)
 	panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -133,18 +133,15 @@ func _make_equip_panel(slot_type: String) -> Panel:
 	vb.add_child(type_lbl)
 
 	var hbox = HBoxContainer.new()
-	hbox.name = "HBox"
 	vb.add_child(hbox)
 
 	var icon = TextureRect.new()
-	icon.name = "Icon"
 	icon.custom_minimum_size = Vector2(16, 16)
 	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	hbox.add_child(icon)
 
 	var lbl = Label.new()
-	lbl.name = "Lbl"
 	lbl.text = "— vuoto —"
 	lbl.add_theme_font_size_override("font_size", 8)
 	lbl.add_theme_color_override("font_color", Color("#F5E6C8"))
@@ -152,7 +149,7 @@ func _make_equip_panel(slot_type: String) -> Panel:
 	lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	hbox.add_child(lbl)
 
-	return panel
+	return {"panel": panel, "icon": icon, "label": lbl}
 
 func _make_item_slot() -> NinePatchRect:
 	var slot = NinePatchRect.new()
@@ -239,8 +236,8 @@ func _update_equip_slot(icon: TextureRect, lbl: Label, item: Dictionary, is_armo
 		lbl.text = "— vuoto —"
 		return
 	var item_name = item.get("name", "?")
-	var icon_path = ITEM_ICON_MAP.get(item_name, "")
-	icon.texture = load(icon_path) if icon_path != "" else null
+	var icon_path = ITEM_ICON_MAP.get(item_name, "res://assets/icons/inv_gem.png")
+	icon.texture = load(icon_path)
 	var stat_val = item.get("defense", 0) if is_armor else item.get("damage", 0)
 	var stat_str = "DEF +%d" % stat_val if is_armor else "ATK %d" % stat_val
 	lbl.text = "%s\n%s" % [item_name, stat_str]
@@ -249,13 +246,9 @@ func _fill_slot(slot: NinePatchRect, item_name: String, qty: int):
 	var icon = slot.get_node_or_null("Icon") as TextureRect
 	var qty_lbl = slot.get_node_or_null("Qty") as Label
 	if icon:
-		var path = ITEM_ICON_MAP.get(item_name, "")
-		if path != "":
-			icon.texture = load(path)
-			icon.visible = true
-		else:
-			icon.texture = null
-			icon.visible = false
+		var path = ITEM_ICON_MAP.get(item_name, "res://assets/icons/inv_gem.png")
+		icon.texture = load(path)
+		icon.visible = true
 	if qty_lbl:
 		qty_lbl.visible = qty > 1
 		if qty > 1:

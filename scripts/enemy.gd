@@ -22,26 +22,26 @@ func _ready():
 	global_position = global_position.snapped(Vector2(TILE_SIZE, TILE_SIZE))
 	_setup_visuals()
 
+const SPRITE_MAP = {
+	"Slime":    "res://assets/sprites/enemy_slime.png",
+	"Goblin":   "res://assets/sprites/enemy_goblin.png",
+	"Orco":     "res://assets/sprites/enemy_orc.png",
+	"Scheletro":"res://assets/sprites/enemy_skeleton.png",
+	"Lupo":     "res://assets/sprites/enemy_wolf.png",
+}
+
 func _setup_visuals():
 	var color_rect = get_node_or_null("ColorRect")
-	match enemy_name:
-		"Slime":
-			if color_rect:
-				color_rect.visible = false
-			var sprite = Sprite2D.new()
-			sprite.texture = load("res://assets/sprites/enemy_slime.png")
-			sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-			add_child(sprite)
-		"Goblin":
-			if color_rect:
-				color_rect.visible = false
-			var sprite = Sprite2D.new()
-			sprite.texture = load("res://assets/sprites/enemy_goblin.png")
-			sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-			add_child(sprite)
-		_:
-			if color_rect:
-				color_rect.color = Color("#E63946")
+	var sprite_path = SPRITE_MAP.get(enemy_name, "")
+	if sprite_path != "":
+		if color_rect:
+			color_rect.visible = false
+		var sprite = Sprite2D.new()
+		sprite.texture = load(sprite_path)
+		sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		add_child(sprite)
+	elif color_rect:
+		color_rect.color = Color("#E63946")
 
 func take_damage(amount: int) -> int:
 	var damage = max(1, amount - defense)

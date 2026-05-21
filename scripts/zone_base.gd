@@ -171,7 +171,7 @@ func _start_game():
 	_on_player_hp_changed(player.hp, player.max_hp)
 	PlayerData.current_scene = get_scene_path()
 	if get_zone_name() != "":
-		NotificationManager.show("Zona: " + get_zone_name())
+		NotificationManager.notify("Zona: " + get_zone_name())
 
 # ── Process ──────────────────────────────────────────────────────────
 

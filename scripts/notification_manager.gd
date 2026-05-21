@@ -21,7 +21,7 @@ func _ready():
 	_lbl.modulate.a = 0.0
 	add_child(_lbl)
 
-func show(text: String):
+func notify(text: String):
 	_lbl.text = text
 	if _tween:
 		_tween.kill()

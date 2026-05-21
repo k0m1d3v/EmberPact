@@ -186,7 +186,7 @@ func _add_exits():
 		func():
 			if player.get_attack() >= 15:
 				return true
-			NotificationManager.show("Hai bisogno di un'arma più potente!")
+			NotificationManager.notify("Hai bisogno di un'arma più potente!")
 			return false)
 
 # ── Role select (first run) ───────────────────────────────────────────

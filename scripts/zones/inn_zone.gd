@@ -84,7 +84,7 @@ func _add_npcs():
 			player.hp = player.max_hp
 			player.hp_changed.emit(player.hp, player.max_hp)
 			player.inventory_changed.emit(player.inventory)
-			NotificationManager.show("HP ripristinati!")
+			NotificationManager.notify("HP ripristinati!")
 			marta.dialogues = ["Buon riposo! Vieni quando hai bisogno."]
 			if QuestManager.is_active("quest_02"):
 				var pellicce = 0
@@ -92,7 +92,7 @@ func _add_npcs():
 					if item is String and item == "Pelliccia":
 						pellicce += 1
 				if pellicce >= 2:
-					NotificationManager.show("Quest completata: Rifornimento!")
+					NotificationManager.notify("Quest completata: Rifornimento!")
 		else:
 			marta.dialogues = ["Non hai abbastanza monete (ti servono 5)."])
 
